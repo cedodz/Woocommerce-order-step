@@ -1,1 +1,132 @@
-{"generator":"Code Snippets v3.0.1","date_created":"2022-05-17 05:20","snippets":[{"name":"CUSTOM PHP ","scope":"global","code":"\/* Ajout status de commande perso et envoi d'emails *\/\nadd_action( 'init', 'register_custom_post_status', 20 );\nfunction register_custom_post_status() {\n    register_post_status( 'wc-ready-pickup', array(\n        'label'                     => _x( 'Pr\u00eat au d\u00e9part', 'Order status', 'woocommerce' ),\n        'public'                    => true,\n        'exclude_from_search'       => false,\n        'show_in_admin_all_list'    => true,\n        'show_in_admin_status_list' => true,\n        'label_count'               => _n_noop( 'Pr\u00eat au d\u00e9part <span class=\"count\">(%s)<\/span>', 'Pr\u00eat au d\u00e9part <span class=\"count\">(%s)<\/span>', 'woocommerce' )\n    ) );\n}\nadd_filter( 'wc_order_statuses', 'custom_wc_order_statuses', 20, 1 );\nfunction custom_wc_order_statuses( $order_statuses ) {\n    $order_statuses['wc-ready-pickup'] = _x( 'Pr\u00eat au d\u00e9part', 'Order status', 'woocommerce' );\n    return $order_statuses;\n}\nadd_filter( 'bulk_actions-edit-shop_order', 'custom_dropdown_bulk_actions_shop_order', 20, 1 );\nfunction custom_dropdown_bulk_actions_shop_order( $actions ) {\n    $actions['mark_ready-pickup'] = __( 'Marquer Pr\u00eat au d\u00e9part', 'woocommerce' );\n    return $actions;\n}\nadd_filter( 'woocommerce_email_actions', 'filter_woocommerce_email_actions');\nfunction filter_woocommerce_email_actions( $actions ) {\n    $actions[] = 'woocommerce_order_status_wc-ready-pickup';\n    return $actions;\n}\n\nadd_action( 'woocommerce_after_shop_loop_item_title', 'shop_loop_display_product_attributes', 4);\nfunction shop_loop_display_product_attributes() {\n    global $product;\n\techo \"<div class='vignette'>\";\n\t$product->get_attribute( 'pa_etat' );\n\t$terms = get_the_terms( $product->id, 'pa_etat');\n     foreach($terms as $term){\n     if($term->name == 'Reconditionn\u00e9'){\n         echo \"<div class='Reconditionn\u00e9'>Reconditionn\u00e9\";\n\t echo \"<\/div>\";}\n\t\t \n\telse  if($term->name=='Neuf')\n           {\n               echo \"<div class='Neuf'>Neuf\";\n\t echo \"<\/div>\";}\n           \n\telse  if($term->name=='Dispo Fournisseur')\n           {\n               echo \"<div class='dispofournisseur'>Dispo Fournisseur\";\n\t echo \"<\/div>\";}\n           }\n\t echo \"<\/div>\";\n}\n\n\n\/* Ajout d'une page grade dans nos page produits *\/\nadd_filter( 'woocommerce_product_tabs', 'wpm_new_product_tab' );\n\nfunction wpm_new_product_tab( $tabs ) {\n\t\n\t\/\/ On ajoute un nouveau bloc\n\t\n\t$tabs['nouveau_bloc'] = array(\n\t\t'title' \t=> __( 'NOS GRADES', 'woocommerce' ),\n\t\t'priority' \t=> 20,\n\t\t'callback' \t=> 'wpm_new_product_tab_content'\n\t);\n\n\treturn $tabs;\n\n}\n\nfunction wpm_new_product_tab_content() {\n\n\t\/\/ Ins\u00e9rez ici le contenu de votre nouveau bloc\n\n\techo '<h2>NOS GRADES<\/h2>';\n\techo '<p> Les grades ne concernent que la partie esth\u00e9tique, tous nos produits sont parfaitement fonctionnels! <p>';\n    echo '<h3> COMME NEUF : <\/h3>\n\t\t    <p> Produit jamais utilis\u00e9, il ne pr\u00e9sente aucun d\u00e9faut <\/p>\n\t\t <h3> TRES BON ETAT : <\/h3>\n\t        <p> Le produit ne pr\u00e9sente aucune rayure, il est comme neuf <\/p>\n\t\t <h3> BON ETAT : <\/h3> \n\t\t\t<p> Le produit pr\u00e9sente des Micro rayures, invisible \u00e0 plus de 20 cm\n\t     <h3> DEFAUT MINEUR <\/h3>\n\t\t\t <p> Le produit pr\u00e9sente une rayure visible et\/ou petits d\u00e9faut(s) visuel <\/p>';\n   \n}\n\nadd_filter( 'woocommerce_variable_price_html', 'custom_variation_price_html', 20, 2 );\nfunction custom_variation_price_html( $price_html, $product ) {\n    $visible_children = $product->get_visible_children();\n    if( count($visible_children) <= 1 ) return $price_html; \/\/ Exit if only one variation\n\n    $regular_price_min = $product->get_variation_regular_price( 'min', true );\n    $sale_price_min = $product->get_variation_sale_price( 'min', true );\n\n    if ( $sale_price_min ) \n        $price_html = __( '\u00c0 partir de', 'woocommerce' ).' '.wc_price( $regular_price_min );\n\n    return $price_html;\n}\n\nadd_filter('woocommerce_available_variation', 'custom_available_variation', 20, 3 ) ;\nfunction custom_available_variation( $args, $product, $variation ) {\n    if( $args['price_html'] == '' )\n        $args['price_html'] = '<span class=\"price\">' . $variation->get_price_html() . '<\/span>';\n    \n    return $args;\n}\n\nadd_action( 'cedric_action_hook', 'afficher_etiquette' );\nfunction afficher_etiquette() {\n global $product;\n\techo \"<div class='vignettetable'>\";\n\t$product->get_attribute( 'pa_etat' );\n\t$terms = get_the_terms( $product->id, 'pa_etat');\n     foreach($terms as $term){\n     if($term->name == 'Reconditionn\u00e9'){\n         echo \"<div class='Reconditionn\u00e9'>Reconditionn\u00e9\";\n\t echo \"<\/div>\";}\n\t\t \n\telse  if($term->name=='Neuf')\n           {\n               echo \"<div class='Neuf'>Neuf\";\n\t echo \"<\/div>\";}\n           \n\telse  if($term->name=='Dispo Fournisseur')\n           {\n               echo \"<div class='dispofournisseur'>Dispo Fournisseur\";\n\t echo \"<\/div>\";}\n           }\n\t echo \"<\/div>\";\n}","priority":"10"}]}
+/* Ajout status de commande perso et envoi d'emails */
+add_action( 'init', 'register_custom_post_status', 20 );
+function register_custom_post_status() {
+    register_post_status( 'wc-ready-pickup', array(
+        'label'                     => _x( 'Prêt au départ', 'Order status', 'woocommerce' ),
+        'public'                    => true,
+        'exclude_from_search'       => false,
+        'show_in_admin_all_list'    => true,
+        'show_in_admin_status_list' => true,
+        'label_count'               => _n_noop( 'Prêt au départ <span class="count">(%s)</span>', 'Prêt au départ <span class="count">(%s)</span>', 'woocommerce' )
+    ) );
+}
+add_filter( 'wc_order_statuses', 'custom_wc_order_statuses', 20, 1 );
+function custom_wc_order_statuses( $order_statuses ) {
+    $order_statuses['wc-ready-pickup'] = _x( 'Prêt au départ', 'Order status', 'woocommerce' );
+    return $order_statuses;
+}
+add_filter( 'bulk_actions-edit-shop_order', 'custom_dropdown_bulk_actions_shop_order', 20, 1 );
+function custom_dropdown_bulk_actions_shop_order( $actions ) {
+    $actions['mark_ready-pickup'] = __( 'Marquer Prêt au départ', 'woocommerce' );
+    return $actions;
+}
+add_filter( 'woocommerce_email_actions', 'filter_woocommerce_email_actions');
+function filter_woocommerce_email_actions( $actions ) {
+    $actions[] = 'woocommerce_order_status_wc-ready-pickup';
+    return $actions;
+}
+
+add_action( 'woocommerce_after_shop_loop_item_title', 'shop_loop_display_product_attributes', 4);
+function shop_loop_display_product_attributes() {
+    global $product;
+	echo "<div class='vignette'>";
+	$product->get_attribute( 'pa_etat' );
+	$terms = get_the_terms( $product->id, 'pa_etat');
+     foreach($terms as $term){
+     if($term->name == 'Reconditionné'){
+         echo "<div class='Reconditionné'>Reconditionné";
+	 echo "</div>";}
+		 
+	else  if($term->name=='Neuf')
+           {
+               echo "<div class='Neuf'>Neuf";
+	 echo "</div>";}
+           
+	else  if($term->name=='Dispo Fournisseur')
+           {
+               echo "<div class='dispofournisseur'>Dispo Fournisseur";
+	 echo "</div>";}
+           }
+	 echo "</div>";
+}
+
+
+/* Ajout d'une page grade dans nos page produits */
+add_filter( 'woocommerce_product_tabs', 'wpm_new_product_tab' );
+
+function wpm_new_product_tab( $tabs ) {
+	
+	// On ajoute un nouveau bloc
+	
+	$tabs['nouveau_bloc'] = array(
+		'title' 	=> __( 'NOS GRADES', 'woocommerce' ),
+		'priority' 	=> 20,
+		'callback' 	=> 'wpm_new_product_tab_content'
+	);
+
+	return $tabs;
+
+}
+
+function wpm_new_product_tab_content() {
+
+	// Insérez ici le contenu de votre nouveau bloc
+
+	echo '<h2>NOS GRADES</h2>';
+	echo '<p> Les grades ne concernent que la partie esthétique, tous nos produits sont parfaitement fonctionnels! <p>';
+    echo '<h3> COMME NEUF : </h3>
+		    <p> Produit jamais utilisé, il ne présente aucun défaut </p>
+		 <h3> TRES BON ETAT : </h3>
+	        <p> Le produit ne présente aucune rayure, il est comme neuf </p>
+		 <h3> BON ETAT : </h3> 
+			<p> Le produit présente des Micro rayures, invisible à plus de 20 cm
+	     <h3> DEFAUT MINEUR </h3>
+			 <p> Le produit présente une rayure visible et/ou petits défaut(s) visuel </p>';
+   
+}
+
+add_filter( 'woocommerce_variable_price_html', 'custom_variation_price_html', 20, 2 );
+function custom_variation_price_html( $price_html, $product ) {
+    $visible_children = $product->get_visible_children();
+    if( count($visible_children) <= 1 ) return $price_html; // Exit if only one variation
+
+    $regular_price_min = $product->get_variation_regular_price( 'min', true );
+    $sale_price_min = $product->get_variation_sale_price( 'min', true );
+
+    if ( $sale_price_min ) 
+        $price_html = __( 'À partir de', 'woocommerce' ).' '.wc_price( $regular_price_min );
+
+    return $price_html;
+}
+
+add_filter('woocommerce_available_variation', 'custom_available_variation', 20, 3 ) ;
+function custom_available_variation( $args, $product, $variation ) {
+    if( $args['price_html'] == '' )
+        $args['price_html'] = '<span class="price">' . $variation->get_price_html() . '</span>';
+    
+    return $args;
+}
+
+add_action( 'cedric_action_hook', 'afficher_etiquette' );
+function afficher_etiquette() {
+ global $product;
+	echo "<div class='vignettetable'>";
+	$product->get_attribute( 'pa_etat' );
+	$terms = get_the_terms( $product->id, 'pa_etat');
+     foreach($terms as $term){
+     if($term->name == 'Reconditionné'){
+         echo "<div class='Reconditionné'>Reconditionné";
+	 echo "</div>";}
+		 
+	else  if($term->name=='Neuf')
+           {
+               echo "<div class='Neuf'>Neuf";
+	 echo "</div>";}
+           
+	else  if($term->name=='Dispo Fournisseur')
+           {
+               echo "<div class='dispofournisseur'>Dispo Fournisseur";
+	 echo "</div>";}
+           }
+	 echo "</div>";
+}
